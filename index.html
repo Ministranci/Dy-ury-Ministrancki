@@ -31,12 +31,11 @@
         .duty-list { display: grid; gap: 15px; }
         .duty-item { background: #fafafa; border-left: 5px solid var(--secondary-color); padding: 15px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; }
         .duty-info h3 { font-size: 1.1rem; color: var(--primary-color); }
-        .delete-btn { background-color: #e74c3c; color: white; border: none; padding: 8px 12px; border-radius: 6px; cursor: pointer; display: none; } /* Domyślnie ukryty */
+        .delete-btn { background-color: #e74c3c; color: white; border: none; padding: 8px 12px; border-radius: 6px; cursor: pointer; display: none; } 
         .delete-btn.visible { display: inline-block; }
         .delete-btn:hover { background-color: #c0392b; }
         .loading { text-align: center; color: #666; font-style: italic; }
         
-        /* Panel Admina w rogu */
         .admin-panel {
             text-align: right;
             margin-bottom: 15px;
@@ -61,7 +60,6 @@
             <p>Wspólny grafik w czasie rzeczywistym</p>
         </header>
 
-        <!-- Formularz dodawania dyżuru dla każdego -->
         <div class="card">
             <h2>Zapisz się na dyżur</h2>
             <form id="dutyForm">
@@ -89,7 +87,6 @@
             </form>
         </div>
 
-        <!-- Lista dyżurów -->
         <div class="card">
             <div class="admin-panel">
                 <button class="admin-toggle" id="adminToggleBtn">Tryb administratora (Usuwanie)</button>
@@ -119,14 +116,14 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getFirestore, collection, addDoc, deleteDoc, doc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-        // ---- WKLEJ TUTAJ SWOJĄ KONFIGURACJĘ Z FIREBASE ----
+        // Konfiguracja projektu Firebase (Projekt Ministranci)
         const firebaseConfig = {
-            apiKey: "TUTAJ_WKLEJ_SWOJ_API_KEY",
-            authDomain: "TUTAJ_WKLEJ_DOMENE.firebaseapp.com",
-            projectId: "TUTAJ_WKLEJ_PROJECT_ID",
-            storageBucket: "TUTAJ_WKLEJ_BUCKET.appspot.com",
-            messagingSenderId: "TUTAJ_WKLEJ_SENDER_ID",
-            appId: "TUTAJ_WKLEJ_APP_ID"
+            apiKey: "sb_publishable_CfYsQVTvAmERvdT53vtmvg_ifd7ejAS",
+            authDomain: "hbkokfqsaemxofjwqcob.firebaseapp.com",
+            projectId: "hbkokfqsaemxofjwqcob",
+            storageBucket: "hbkokfqsaemxofjwqcob.appspot.com",
+            messagingSenderId: "ministranci",
+            appId: "ministranci-app"
         };
 
         const app = initializeApp(firebaseConfig);
@@ -139,10 +136,9 @@
         const adminToggleBtn = document.getElementById('adminToggleBtn');
 
         let allDuties = [];
-        let isAdmin = false; // Status administratora
-        const ADMIN_PASSWORD = "123"; // <-- TUTAJ MOŻESZ ZMIENIĆ HASŁO DLA ADMINA
+        let isAdmin = false; 
+        const ADMIN_PASSWORD = "123"; // Hasło administratora do usuwania dyżurów
 
-        // Obsługa przycisku logowania admina
         adminToggleBtn.addEventListener('click', () => {
             if (!isAdmin) {
                 const pass = prompt("Wpisz hasło administratora:");
@@ -162,7 +158,6 @@
             }
         });
 
-        // Pobieranie danych na żywo
         onSnapshot(collection(db, "duties"), (snapshot) => {
             allDuties = [];
             snapshot.forEach((docSnap) => {
@@ -171,7 +166,6 @@
             renderDuties();
         });
 
-        // Dodawanie dyżuru
         dutyForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             submitBtn.disabled = true;
@@ -192,7 +186,6 @@
             }
         });
 
-        // Usuwanie dyżuru (tylko dla admina)
         window.deleteDuty = async function(id) {
             if (!isAdmin) {
                 alert("Brak uprawnień!");
@@ -207,7 +200,6 @@
             }
         };
 
-        // Renderowanie listy
         function renderDuties() {
             const selectedFilter = filterDay.value;
             dutyList.innerHTML = '';
@@ -226,7 +218,6 @@
                 const item = document.createElement('div');
                 item.className = 'duty-item';
                 
-                // Klasa 'visible' decyduje, czy przycisk usuwania się wyświetli
                 const deleteBtnClass = isAdmin ? 'delete-btn visible' : 'delete-btn';
 
                 item.innerHTML = `
@@ -247,16 +238,5 @@
             return text.replace(/[&<>"']/g, function(m) { return map[m]; });
         }
     </script>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script>
-  // Wklej tutaj adres URL projektu:
-  const supabaseUrl = 'https://hbkokfqsaemxofjwqcob.supabase.co';
-  
-  // Twój klucz publiczny:
-  const supabaseKey = 'sb_publishable_CfYsQVTvAmERvdT53vtmvg_ifd7ejAS';
-
-  // Inicjalizacja połączenia
-  const _supabase = supabase.createClient(supabaseUrl, supabaseKey);
-</script>
 </body>
 </html>
