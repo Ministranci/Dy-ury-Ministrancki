@@ -247,5 +247,16 @@
             return text.replace(/[&<>"']/g, function(m) { return map[m]; });
         }
     </script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+  // Wklej tutaj adres URL projektu:
+  const supabaseUrl = 'https://hbkokfqsaemxofjwqcob.supabase.co';
+  
+  // Twój klucz publiczny:
+  const supabaseKey = 'sb_publishable_CfYsQVTvAmERvdT53vtmvg_ifd7ejAS';
+
+  // Inicjalizacja połączenia
+  const _supabase = supabase.createClient(supabaseUrl, supabaseKey);
+</script>
 </body>
 </html>
