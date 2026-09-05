@@ -111,23 +111,13 @@
         </div>
     </div>
 
-    <!-- Firebase SDK -->
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getFirestore, collection, addDoc, deleteDoc, doc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
-
-        // Konfiguracja projektu Firebase (Projekt Ministranci)
-        const firebaseConfig = {
-            apiKey: "sb_publishable_CfYsQVTvAmERvdT53vtmvg_ifd7ejAS",
-            authDomain: "hbkokfqsaemxofjwqcob.firebaseapp.com",
-            projectId: "hbkokfqsaemxofjwqcob",
-            storageBucket: "hbkokfqsaemxofjwqcob.appspot.com",
-            messagingSenderId: "ministranci",
-            appId: "ministranci-app"
-        };
-
-        const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
+    <!-- Supabase SDK -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script>
+        // Konfiguracja Supabase
+        const supabaseUrl = 'https://hbkokfqsaemxofjwqcob.supabase.co';
+        const supabaseKey = 'sb_publishable_CfYsQVTvAmERvdT53vtmvg_ifd7ejAS';
+        const _supabase = supabase.createClient(supabaseUrl, supabaseKey);
 
         const dutyForm = document.getElementById('dutyForm');
         const dutyList = document.getElementById('dutyList');
@@ -137,7 +127,7 @@
 
         let allDuties = [];
         let isAdmin = false; 
-        const ADMIN_PASSWORD = "123"; // Hasło administratora do usuwania dyżurów
+        const ADMIN_PASSWORD = "123"; // Hasło administratora do usuwania
 
         adminToggleBtn.addEventListener('click', () => {
             if (!isAdmin) {
@@ -158,14 +148,24 @@
             }
         });
 
-        onSnapshot(collection(db, "duties"), (snapshot) => {
-            allDuties = [];
-            snapshot.forEach((docSnap) => {
-                allDuties.push({ id: docSnap.id, ...docSnap.data() });
-            });
-            renderDuties();
-        });
+        // Pobieranie danych z Supabase
+        async function fetchDuties() {
+            const { data, error } = await _supabase
+                .from('dyzury')
+                .select('*')
+                .order('created_at', { ascending: false });
 
+            if (error) {
+                console.error('Błąd pobierania:', error);
+                dutyList.innerHTML = '<div class="loading" style="color: red;">Błąd wczytywania danych z bazy.</div>';
+                return;
+            }
+
+            allDuties = data || [];
+            renderDuties();
+        }
+
+        // Zapisywanie dyżuru do Supabase
         dutyForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             submitBtn.disabled = true;
@@ -175,31 +175,42 @@
             const day = document.getElementById('dayOfWeek').value;
             const time = document.getElementById('massTime').value.trim();
 
-            try {
-                await addDoc(collection(db, "duties"), { name, day, time, createdAt: Date.now() });
-                dutyForm.reset();
-            } catch (error) {
+            const { error } = await _supabase
+                .from('dyzury')
+                .insert([{ name: name, day: day, time: time }]);
+
+            submitBtn.disabled = false;
+            submitBtn.textContent = "Zapisz dyżur";
+
+            if (error) {
                 alert("Błąd podczas zapisywania: " + error.message);
-            } finally {
-                submitBtn.disabled = false;
-                submitBtn.textContent = "Zapisz dyżur";
+            } else {
+                dutyForm.reset();
+                fetchDuties(); // Odśwież listę
             }
         });
 
+        // Usuwanie dyżuru (tylko dla admina)
         window.deleteDuty = async function(id) {
             if (!isAdmin) {
                 alert("Brak uprawnień!");
                 return;
             }
             if (confirm('Czy na pewno chcesz usunąć ten dyżur?')) {
-                try {
-                    await deleteDoc(doc(db, "duties", id));
-                } catch (error) {
+                const { error } = await _supabase
+                    .from('dyzury')
+                    .delete()
+                    .eq('id', id);
+
+                if (error) {
                     alert("Błąd podczas usuwania: " + error.message);
+                } else {
+                    fetchDuties(); // Odśwież listę
                 }
             }
         };
 
+        // Renderowanie listy na stronie
         function renderDuties() {
             const selectedFilter = filterDay.value;
             dutyList.innerHTML = '';
@@ -234,9 +245,13 @@
         filterDay.addEventListener('change', renderDuties);
 
         function escapeHtml(text) {
+            if (!text) return '';
             const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' };
-            return text.replace(/[&<>"']/g, function(m) { return map[m]; });
+            return text.toString().replace(/[&<>"']/g, function(m) { return map[m]; });
         }
+
+        // Pobierz dane przy starcie strony
+        fetchDuties();
     </script>
 </body>
 </html>
